@@ -9,6 +9,12 @@
 
 // Import the interfaces
 #import "HelloWorldLayer.h"
+#import "XLDashedLine.h"
+
+static ccColor4F ccc4F(float _r, float _g, float _b, float _a) {
+    ccColor4F retColor = {_r, _g, _b, _a};
+    return retColor;
+}
 
 // HelloWorldLayer implementation
 @implementation HelloWorldLayer
@@ -28,35 +34,50 @@
 	return scene;
 }
 
-// on "init" you need to initialize your instance
--(id) init
-{
-	// always call "super" init
-	// Apple recommends to re-assign "self" with the "super" return value
-	if( (self=[super init])) {
-		
-		// create and initialize a Label
-		CCLabelTTF *label = [CCLabelTTF labelWithString:@"Hello World" fontName:@"Marker Felt" fontSize:64];
+- (void)onEnterTransitionDidFinish {
+    [[CCTouchDispatcher sharedDispatcher] addTargetedDelegate:self priority:-1 swallowsTouches:YES];
+    [super onEnterTransitionDidFinish];
+}
 
-		// ask director the the window size
+- (void)onExit {
+    [[CCTouchDispatcher sharedDispatcher] removeDelegate:self];
+    [super onExit];
+}
+
+// on "init" you need to initialize your instance
+- (id)init {
+	if ((self = [super init])) {
+		CCLabelTTF *label = [CCLabelTTF labelWithString:@"Touch and Drag" fontName:@"Marker Felt" fontSize:32];
 		CGSize size = [[CCDirector sharedDirector] winSize];
-	
-		// position the label on the center of the screen
 		label.position =  ccp( size.width /2 , size.height/2 );
-		
-		// add the label as a child to this Layer
 		[self addChild: label];
+        
+        line = [XLDashedLine lineWithStartPoint:ccp(0.0, 0.0) endPoint:ccp(0.0, 0.0) width:4.0 color:ccc4F(1.0, 1.0, 1.0, 1.0) dashLength:8.0];
+        line.visible = NO;
+        [self addChild:line];
 	}
 	return self;
+}
+
+- (BOOL)ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event {
+    CGPoint location = [[CCDirector sharedDirector] convertToGL:[touch locationInView:touch.view]];
+    line.startPoint = location;
+    return YES;
+}
+
+- (void)ccTouchMoved:(UITouch *)touch withEvent:(UIEvent *)event {
+    CGPoint location = [[CCDirector sharedDirector] convertToGL:[touch locationInView:touch.view]];
+    line.endPoint = location;
+    line.visible = YES;
+}
+
+- (void)ccTouchEnded:(UITouch *)touch withEvent:(UIEvent *)event {
+    line.visible = NO;
 }
 
 // on "dealloc" you need to release all your retained objects
 - (void) dealloc
 {
-	// in case you have something to dealloc, do it in this method
-	// in this particular example nothing needs to be released.
-	// cocos2d will automatically release all the children (Label)
-	
 	// don't forget to call "super dealloc"
 	[super dealloc];
 }
